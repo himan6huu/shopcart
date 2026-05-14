@@ -14,8 +14,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-with app.app_context():
-    db.create_all()
+
 
 # ── Config ─────────────────────────────────────────────────────────────────────
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
@@ -33,7 +32,7 @@ app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME", "")
 app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD", "")
 app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_USERNAME", "noreply@shopcart.com")
 
-db   = SQLAlchemy(app)
+
 mail = Mail(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
@@ -651,6 +650,9 @@ def admin_toggle_coupon(cid):
 def forbidden(e): return render_template("403.html"), 403
 @app.errorhandler(404)
 def not_found(e): return render_template("404.html"), 404
+
+with app.app_context():
+    db.create_all()
 
 if __name__ == "__main__":
     with app.app_context():
