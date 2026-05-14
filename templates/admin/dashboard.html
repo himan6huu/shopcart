@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — ShopCart{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <h3>Admin Panel</h3>
+    <nav>
+      <a href="{{ url_for('admin_dashboard') }}" class="active">Dashboard</a>
+      <a href="{{ url_for('admin_analytics') }}">Analytics</a>
+      <a href="{{ url_for('admin_products') }}">Products</a>
+      <a href="{{ url_for('admin_orders') }}">Orders</a>
+      <a href="{{ url_for('admin_coupons') }}">Coupons</a>
+      <a href="{{ url_for('index') }}">Back to Shop</a>
+    </nav>
+  </aside>
+  <div class="admin-main">
+    <h1 class="admin-title">Dashboard</h1>
+    <div class="stats-grid">
+      <div class="stat-card stat-card--green"><span class="stat-icon">📦</span><div><div class="stat-val">{{ total_products }}</div><div class="stat-label">Products</div></div></div>
+      <div class="stat-card"><span class="stat-icon">🧾</span><div><div class="stat-val">{{ total_orders }}</div><div class="stat-label">Orders</div></div></div>
+      <div class="stat-card"><span class="stat-icon">👤</span><div><div class="stat-val">{{ total_users }}</div><div class="stat-label">Users</div></div></div>
+    </div>
+    <div class="admin-section" style="margin-top:1.5rem;">
+      <div class="section-header">
+        <h2>Recent Orders</h2>
+        <a href="{{ url_for('admin_orders') }}" class="btn btn--sm btn--outline">View All</a>
+      </div>
+      <table class="admin-table">
+        <thead><tr><th>Ref</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th><th>Track</th></tr></thead>
+        <tbody>
+          {% for o in recent_orders %}
+            <tr>
+              <td><strong>#{{ o.order_ref }}</strong></td>
+              <td>{{ o.full_name }}</td>
+              <td>{{ o.total | inr }}</td>
+              <td><span class="status-badge status--{{ o.status|lower }}">{{ o.status }}</span></td>
+              <td>{{ o.created_at.strftime('%d %b %Y') }}</td>
+              <td><a href="{{ url_for('order_detail', order_ref=o.order_ref) }}" class="btn btn--sm btn--outline">View</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:1rem;display:flex;gap:.75rem;">
+      <a href="{{ url_for('admin_analytics') }}" class="btn btn--primary">View Analytics</a>
+      <a href="{{ url_for('admin_coupons') }}" class="btn btn--outline">Manage Coupons</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

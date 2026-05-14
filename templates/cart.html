@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Cart — ShopCart{% endblock %}
+{% block content %}
+<section class="cart-page">
+  <h1>Your Cart <span class="cart-count-label">{{ cart_count }} item{{ 's' if cart_count != 1 }}</span></h1>
+
+  {% if items %}
+    <div class="cart-layout">
+      <div class="cart-items">
+        {% for item in items %}
+          <div class="cart-row">
+            <a href="{{ url_for('product', pid=item.id) }}" class="cart-img-wrap">
+              <img src="{{ item.image }}" alt="{{ item.name }}" class="cart-img">
+            </a>
+            <div class="cart-item-info">
+              <span class="product-category">{{ item.category }}</span>
+              <h3><a href="{{ url_for('product', pid=item.id) }}">{{ item.name }}</a></h3>
+              <span class="price">{{ item.price | inr }} each</span>
+            </div>
+            <form action="{{ url_for('update_cart') }}" method="post" class="qty-form">
+              <input type="hidden" name="product_id" value="{{ item.id }}">
+              <div class="qty-control">
+                <button type="button" onclick="adjCart(this,-1)">-</button>
+                <input type="number" name="quantity" value="{{ item.qty }}" min="0" max="{{ item.stock }}" class="qty-input">
+                <button type="button" onclick="adjCart(this,1)">+</button>
+              </div>
+              <button type="submit" class="qty-update">Update</button>
+            </form>
+            <span class="subtotal">{{ item.subtotal | inr }}</span>
+            <a href="{{ url_for('remove_from_cart', pid=item.id) }}" class="remove-btn" title="Remove">x</a>
+          </div>
+        {% endfor %}
+      </div>
+
+      <aside class="cart-summary">
+        <h2>Order Summary</h2>
+        <div class="coupon-box">
+          {% if coupon %}
+            <div class="coupon-applied">
+              <span>Gift <strong>{{ coupon.code }}</strong> - {{ coupon.pct }}% off</span>
+              <a href="{{ url_for('remove_coupon') }}" class="coupon-remove">x</a>
+            </div>
+          {% else %}
+            <div class="coupon-form">
+              <input type="text" id="couponInput" placeholder="Coupon code">
+              <button class="btn btn--outline btn--sm" onclick="applyCoupon()">Apply</button>
+            </div>
+            <div id="couponMsg" class="coupon-msg"></div>
+          {% endif %}
+        </div>
+        <div class="summary-row"><span>Subtotal</span><span>{{ subtotal | inr }}</span></div>
+        {% if discount > 0 %}
+          <div class="summary-row discount-row"><span>Discount ({{ coupon.code }})</span><span>- {{ discount | inr }}</span></div>
+        {% endif %}
+        <div class="summary-row">
+          <span>Shipping</span>
+          <span>{% if subtotal >= 2000 %}<span class="free-tag">FREE</span>{% else %}Rs.99{% endif %}</span>
+        </div>
+        {% if subtotal < 2000 %}
+          <div class="free-shipping-bar">
+            <div class="bar-label">Add {{ (2000 - subtotal) | inr }} more for free shipping</div>
+            <div class="bar-track"><div class="bar-fill" style="width:{{ [(subtotal/2000*100)|int,100]|min }}%"></div></div>
+          </div>
+        {% endif %}
+        <div class="summary-row summary-total">
+          <span>Total</span>
+          <span>{{ ((subtotal - discount) if subtotal >= 2000 else (subtotal + 99 - discount)) | inr }}</span>
+        </div>
+        <a href="{{ url_for('checkout') }}" class="btn btn--primary btn--full btn--lg" style="margin-top:.75rem">Checkout</a>
+        <a href="{{ url_for('index') }}" class="btn btn--outline btn--full" style="margin-top:.5rem">Continue Shopping</a>
+      </aside>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <span>Cart</span>
+      <h2>Your cart is empty</h2>
+      <p>Looks like you have not added anything yet.</p>
+      <a href="{{ url_for('index') }}" class="btn btn--primary btn--lg">Start Shopping</a>
+    </div>
+  {% endif %}
+</section>
+<script>
+function adjCart(btn, delta) {
+  const input = btn.closest('.qty-form').querySelector('.qty-input');
+  const v = parseInt(input.value) + delta;
+  if (v >= 0 && v <= parseInt(input.max)) input.value = v;
+}
+async function applyCoupon() {
+  const code = document.getElementById('couponInput').value.trim().toUpperCase();
+  const msg  = document.getElementById('couponMsg');
+  if (!code) return;
+  const form = new FormData(); form.append('coupon_code', code);
+  const res  = await fetch('/coupon/apply', { method:'POST', body: form });
+  const data = await res.json();
+  msg.textContent = data.msg;
+  msg.className   = 'coupon-msg ' + (data.ok ? 'coupon-msg--ok' : 'coupon-msg--err');
+  if (data.ok) setTimeout(() => location.reload(), 900);
+}
+</script>
+{% endblock %}

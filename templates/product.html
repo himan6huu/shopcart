@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} — ShopCart{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('index') }}">Shop</a> /
+  <a href="{{ url_for('index', category=product.category) }}">{{ product.category }}</a> /
+  <span>{{ product.name }}</span>
+</div>
+
+<section class="product-detail">
+  <div class="detail-grid">
+    <div class="detail-image">
+      <img src="{{ product.image }}" alt="{{ product.name }}" class="detail-img">
+    </div>
+    <div class="detail-info">
+      <span class="product-category">{{ product.category }}</span>
+      <h1>{{ product.name }}</h1>
+      <div class="detail-rating">
+        <span class="stars stars--lg">{{ product.rating | stars }}</span>
+        <span class="rating-val">{{ product.rating }}</span>
+        <span class="rating-count">({{ product.rating_count }} reviews)</span>
+      </div>
+      <div class="detail-price">{{ product.price | inr }}</div>
+      <p class="detail-desc">{{ product.description }}</p>
+      <div class="detail-meta">
+        {% if product.stock > 0 %}
+          <span class="stock-badge stock--in">{{ product.stock }} in stock</span>
+        {% else %}
+          <span class="stock-badge stock--out">Out of stock</span>
+        {% endif %}
+      </div>
+      {% if product.stock > 0 %}
+        <form action="{{ url_for('add_to_cart') }}" method="post" class="detail-form">
+          <input type="hidden" name="product_id" value="{{ product.id }}">
+          <div class="qty-row">
+            <label>Qty</label>
+            <div class="qty-control">
+              <button type="button" onclick="adjQty(-1)">-</button>
+              <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ product.stock }}">
+              <button type="button" onclick="adjQty(1)">+</button>
+            </div>
+            <button class="btn btn--primary btn--lg" type="submit">Add to Cart</button>
+          </div>
+        </form>
+      {% endif %}
+
+      <!-- Wishlist button -->
+      {% if current_user.is_authenticated %}
+        <button class="btn {% if in_wishlist %}btn--danger{% else %}btn--outline{% endif %} wishlist-btn"
+                id="wishlistBtn" onclick="toggleWishlist({{ product.id }})">
+          {% if in_wishlist %}Remove from Wishlist{% else %}Save to Wishlist{% endif %}
+        </button>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="btn btn--outline wishlist-btn">Save to Wishlist</a>
+      {% endif %}
+
+      <div class="trust-badges">
+        <span>Secure Payment</span>
+        <span>Free Shipping over Rs.2,000</span>
+        <span>Easy Returns</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if related %}
+<section class="related-section">
+  <h2>You May Also Like</h2>
+  <div class="related-grid">
+    {% for p in related %}
+      <article class="product-card product-card--sm">
+        <a href="{{ url_for('product', pid=p.id) }}" class="product-image">
+          <img src="{{ p.image }}" alt="{{ p.name }}" class="product-img" loading="lazy">
+        </a>
+        <div class="product-info">
+          <h3><a href="{{ url_for('product', pid=p.id) }}">{{ p.name }}</a></h3>
+          <div class="product-footer">
+            <span class="price">{{ p.price | inr }}</span>
+            {% if p.stock > 0 %}
+              <form action="{{ url_for('add_to_cart') }}" method="post">
+                <input type="hidden" name="product_id" value="{{ p.id }}">
+                <input type="hidden" name="quantity" value="1">
+                <button class="btn btn--primary btn--sm" type="submit">+ Cart</button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<script>
+function adjQty(delta) {
+  const i = document.getElementById('quantity');
+  const v = parseInt(i.value) + delta;
+  if (v >= 1 && v <= parseInt(i.max)) i.value = v;
+}
+async function toggleWishlist(pid) {
+  const btn = document.getElementById('wishlistBtn');
+  const form = new FormData();
+  const res  = await fetch(`/wishlist/toggle/${pid}`, { method: 'POST', body: form });
+  const data = await res.json();
+  if (data.status === 'added') {
+    btn.textContent = 'Remove from Wishlist';
+    btn.className = 'btn btn--danger wishlist-btn';
+  } else {
+    btn.textContent = 'Save to Wishlist';
+    btn.className = 'btn btn--outline wishlist-btn';
+  }
+}
+</script>
+{% endblock %}

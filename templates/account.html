@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}My Account — ShopCart{% endblock %}
+{% block content %}
+<section class="account-page">
+  <div class="account-header">
+    <h1>My Account</h1>
+    <div class="account-info">
+      <strong>{{ current_user.name }}</strong>
+      <span>{{ current_user.email }}</span>
+      <span class="joined">Member since {{ current_user.created_at.strftime('%b %Y') }}</span>
+    </div>
+  </div>
+
+  <div class="account-tabs">
+    <a href="{{ url_for('account') }}" class="tab-btn active">Orders</a>
+    <a href="{{ url_for('wishlist') }}" class="tab-btn">Wishlist</a>
+  </div>
+
+  <div class="orders-section">
+    <h2>Order History <span class="count-badge">{{ orders|length }}</span></h2>
+    {% if orders %}
+      {% for order in orders %}
+        <div class="order-card">
+          <div class="order-card-header">
+            <div>
+              <strong>#{{ order.order_ref }}</strong>
+              <span class="order-date">{{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+            </div>
+            <div style="display:flex;gap:.75rem;align-items:center;">
+              <span class="status-badge status--{{ order.status|lower }}">{{ order.status }}</span>
+              <a href="{{ url_for('order_detail', order_ref=order.order_ref) }}" class="btn btn--sm btn--outline">Track Order</a>
+            </div>
+          </div>
+          <div class="order-card-items">
+            {% for item in order.items %}
+              <div class="co-item">
+                <img src="{{ item.product_image }}" alt="{{ item.product_name }}" class="co-img">
+                <div class="co-info"><span>{{ item.product_name }}</span><small>x {{ item.qty }}</small></div>
+                <span class="co-price">{{ item.subtotal | inr }}</span>
+              </div>
+            {% endfor %}
+          </div>
+          <div class="order-card-footer">
+            <span>{{ order.items|length }} item{{ 's' if order.items|length != 1 }}</span>
+            <span class="order-total">Total: <strong>{{ order.total | inr }}</strong></span>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <span>📦</span>
+        <h2>No orders yet</h2>
+        <p>Your order history will appear here after your first purchase.</p>
+        <a href="{{ url_for('index') }}" class="btn btn--primary">Start Shopping</a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Orders — Admin{% endblock %}
+{% block content %}
+
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <h3>⚙ Admin Panel</h3>
+    <nav>
+      <a href="{{ url_for('admin_dashboard') }}">📊 Dashboard</a>
+      <a href="{{ url_for('admin_products') }}">📦 Products</a>
+      <a href="{{ url_for('admin_orders') }}" class="active">🧾 Orders</a>
+      <a href="{{ url_for('index') }}">← Back to Shop</a>
+    </nav>
+  </aside>
+
+  <div class="admin-main">
+    <h1 class="admin-title">All Orders <span class="count-badge">{{ orders|length }}</span></h1>
+
+    <table class="admin-table">
+      <thead>
+        <tr><th>Ref</th><th>Customer</th><th>City</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th><th>Update</th></tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+          <tr>
+            <td><strong>#{{ o.order_ref }}</strong></td>
+            <td>
+              <div>{{ o.full_name }}</div>
+              <small class="text-muted">{{ o.email }}</small>
+            </td>
+            <td>{{ o.city }}</td>
+            <td>{{ o.items|length }}</td>
+            <td>{{ o.total | inr }}</td>
+            <td><span class="status-badge status--{{ o.status|lower }}">{{ o.status }}</span></td>
+            <td>{{ o.created_at.strftime('%d %b %Y') }}</td>
+            <td>
+              <form action="{{ url_for('admin_update_status', oid=o.id) }}" method="post" class="status-form">
+                <select name="status">
+                  {% for s in ['Confirmed','Processing','Shipped','Delivered','Cancelled'] %}
+                    <option value="{{ s }}" {% if o.status==s %}selected{% endif %}>{{ s }}</option>
+                  {% endfor %}
+                </select>
+                <button class="btn btn--sm btn--primary" type="submit">Save</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

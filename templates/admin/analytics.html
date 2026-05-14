@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Analytics — Admin{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <h3>⚙ Admin Panel</h3>
+    <nav>
+      <a href="{{ url_for('admin_dashboard') }}">📊 Dashboard</a>
+      <a href="{{ url_for('admin_analytics') }}" class="active">📈 Analytics</a>
+      <a href="{{ url_for('admin_products') }}">📦 Products</a>
+      <a href="{{ url_for('admin_orders') }}">🧾 Orders</a>
+      <a href="{{ url_for('admin_coupons') }}">🎁 Coupons</a>
+      <a href="{{ url_for('index') }}">← Back to Shop</a>
+    </nav>
+  </aside>
+
+  <div class="admin-main">
+    <h1 class="admin-title">📈 Analytics</h1>
+
+    <!-- KPI Cards -->
+    <div class="stats-grid stats-grid--4">
+      <div class="stat-card stat-card--green">
+        <span class="stat-icon">💰</span>
+        <div><div class="stat-val">{{ total_revenue | inr }}</div><div class="stat-label">Total Revenue</div></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">🧾</span>
+        <div><div class="stat-val">{{ total_orders }}</div><div class="stat-label">Total Orders</div></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">👤</span>
+        <div><div class="stat-val">{{ total_users }}</div><div class="stat-label">Registered Users</div></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">📦</span>
+        <div><div class="stat-val">{{ avg_order | inr }}</div><div class="stat-label">Avg Order Value</div></div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <h2>Revenue — Last 7 Days</h2>
+        <canvas id="revenueChart" height="120"></canvas>
+      </div>
+      <div class="chart-card">
+        <h2>Orders by Status</h2>
+        <canvas id="statusChart" height="120"></canvas>
+      </div>
+    </div>
+
+    <!-- Top Products & Category Revenue -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <h2>🏆 Top Products by Revenue</h2>
+        {% if top_products %}
+          <table class="admin-table">
+            <thead><tr><th>#</th><th>Product</th><th>Revenue</th></tr></thead>
+            <tbody>
+              {% for name, rev in top_products %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ name }}</td>
+                  <td><strong>{{ rev | inr }}</strong></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="no-data">No orders yet.</p>
+        {% endif %}
+      </div>
+      <div class="chart-card">
+        <h2>Revenue by Category</h2>
+        <canvas id="categoryChart" height="160"></canvas>
+      </div>
+    </div>
+
+    <!-- Coupon Stats -->
+    <div class="chart-card" style="margin-top:1.5rem;">
+      <h2>🎁 Coupon Usage</h2>
+      <table class="admin-table">
+        <thead><tr><th>Code</th><th>Discount</th><th>Min Order</th><th>Used</th><th>Max Uses</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for c in coupons %}
+            <tr>
+              <td><strong>{{ c.code }}</strong></td>
+              <td>{{ c.discount_pct }}%</td>
+              <td>{{ c.min_order | inr }}</td>
+              <td>{{ c.used_count }}</td>
+              <td>{{ c.max_uses }}</td>
+              <td><span class="status-badge {% if c.active %}status--delivered{% else %}status--cancelled{% endif %}">{{ 'Active' if c.active else 'Inactive' }}</span></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const GREEN = '#2d6a4f', GREEN_L = '#40916c', ACCENT = '#f4a261';
+const PALETTE = ['#2d6a4f','#40916c','#52b788','#74c69d','#95d5b2','#b7e4c7','#f4a261','#e76f51'];
+
+// Revenue line chart
+new Chart(document.getElementById('revenueChart'), {
+  type: 'line',
+  data: {
+    labels: {{ daily_labels | tojson }},
+    datasets: [{
+      label: 'Revenue (₹)',
+      data: {{ daily_values | tojson }},
+      borderColor: GREEN, backgroundColor: 'rgba(45,106,79,.1)',
+      fill: true, tension: 0.4, pointBackgroundColor: GREEN, pointRadius: 5
+    }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+});
+
+// Status doughnut
+new Chart(document.getElementById('statusChart'), {
+  type: 'doughnut',
+  data: {
+    labels: {{ status_labels | tojson }},
+    datasets: [{ data: {{ status_values | tojson }}, backgroundColor: PALETTE, borderWidth: 2 }]
+  },
+  options: { plugins: { legend: { position: 'bottom' } } }
+});
+
+// Category bar chart
+new Chart(document.getElementById('categoryChart'), {
+  type: 'bar',
+  data: {
+    labels: {{ cat_revenue | map(attribute=0) | list | tojson }},
+    datasets: [{
+      label: 'Revenue (₹)',
+      data: {{ cat_revenue | map(attribute=1) | list | tojson }},
+      backgroundColor: PALETTE
+    }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+});
+</script>
+{% endblock %}

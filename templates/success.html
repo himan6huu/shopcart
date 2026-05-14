@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Order Confirmed — ShopCart{% endblock %}
+{% block content %}
+
+<section class="success-page">
+  <div class="success-card">
+    <div class="success-anim">✅</div>
+    <h1>Order Confirmed!</h1>
+    <p>Thank you for your purchase. A confirmation has been sent to <strong>{{ order.email }}</strong>.</p>
+
+    <div class="order-meta">
+      <div class="meta-item"><span>Order ID</span><strong>#{{ order.order_ref }}</strong></div>
+      <div class="meta-item"><span>Status</span><strong class="status-badge status--{{ order.status|lower }}">{{ order.status }}</strong></div>
+      <div class="meta-item"><span>Total Paid</span><strong>{{ order.total | inr }}</strong></div>
+      <div class="meta-item"><span>Date</span><strong>{{ order.created_at.strftime('%d %b %Y') }}</strong></div>
+    </div>
+
+    <div class="order-items-list">
+      {% for item in order.items %}
+        <div class="co-item">
+          <img src="{{ item.product_image }}" alt="{{ item.product_name }}" class="co-img">
+          <div class="co-info"><span>{{ item.product_name }}</span><small>× {{ item.qty }}</small></div>
+          <span class="co-price">{{ item.subtotal | inr }}</span>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="success-actions">
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('account') }}" class="btn btn--outline">View All Orders</a>
+      {% endif %}
+      <a href="{{ url_for('index') }}" class="btn btn--primary btn--lg">Continue Shopping</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

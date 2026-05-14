@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}My Wishlist — ShopCart{% endblock %}
+{% block content %}
+<section class="cart-page">
+  <h1>❤️ My Wishlist <span class="cart-count-label">{{ items|length }} item{{ 's' if items|length != 1 }}</span></h1>
+
+  {% if items %}
+    <div class="wishlist-grid">
+      {% for w in items %}
+        <article class="product-card">
+          <a href="{{ url_for('product', pid=w.product.id) }}" class="product-image">
+            <img src="{{ w.product.image }}" alt="{{ w.product.name }}" class="product-img" loading="lazy">
+          </a>
+          <div class="product-info">
+            <span class="product-category">{{ w.product.category }}</span>
+            <h3><a href="{{ url_for('product', pid=w.product.id) }}">{{ w.product.name }}</a></h3>
+            <div class="product-rating">
+              <span class="stars">{{ w.product.rating | stars }}</span>
+              <span class="rating-count">({{ w.product.rating_count }})</span>
+            </div>
+            <div class="product-footer">
+              <span class="price">{{ w.product.price | inr }}</span>
+            </div>
+            <div class="wishlist-actions">
+              <a href="{{ url_for('move_to_cart', pid=w.product.id) }}" class="btn btn--primary btn--sm btn--full">🛒 Move to Cart</a>
+              <a href="{{ url_for('remove_wishlist', pid=w.product.id) }}" class="btn btn--outline btn--sm btn--full">✕ Remove</a>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <span>❤️</span>
+      <h2>Your wishlist is empty</h2>
+      <p>Save products you love and come back to them anytime.</p>
+      <a href="{{ url_for('index') }}" class="btn btn--primary btn--lg">Browse Products</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

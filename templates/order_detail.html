@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Order #{{ order.order_ref }} — ShopCart{% endblock %}
+{% block content %}
+<section class="account-page">
+  <div class="order-detail-header">
+    <a href="{{ url_for('account') }}" class="back-link">← My Orders</a>
+    <h1>Order <span class="ref">#{{ order.order_ref }}</span></h1>
+    <span class="status-badge status--{{ order.status|lower }}">{{ order.status }}</span>
+  </div>
+
+  <!-- Status Timeline -->
+  <div class="timeline-card">
+    <h2>📦 Order Tracking</h2>
+    <div class="timeline">
+      {% set icons = {"Confirmed": "✅", "Processing": "⚙️", "Shipped": "🚚", "Delivered": "🏠"} %}
+      {% set descriptions = {
+        "Confirmed":  "Your order has been received and confirmed.",
+        "Processing": "We are preparing your items for shipment.",
+        "Shipped":    "Your order is on its way to you.",
+        "Delivered":  "Your order has been delivered. Enjoy!"
+      } %}
+      {% for status, done in order.get_timeline() %}
+        <div class="timeline-step {% if done %}done{% endif %}">
+          <div class="timeline-dot">{{ icons[status] if done else '○' }}</div>
+          <div class="timeline-content">
+            <strong>{{ status }}</strong>
+            <p>{{ descriptions[status] }}</p>
+            {% if done and loop.last %}
+              <small>{{ order.created_at.strftime('%d %b %Y') }}</small>
+            {% endif %}
+          </div>
+        </div>
+        {% if not loop.last %}<div class="timeline-line {% if done %}done{% endif %}"></div>{% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Order Items -->
+  <div class="order-card" style="margin-top:1.5rem;">
+    <div class="order-card-header">
+      <div>
+        <strong>Items Ordered</strong>
+        <span class="order-date">{{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+      </div>
+    </div>
+    <div class="order-card-items">
+      {% for item in order.items %}
+        <div class="co-item">
+          <img src="{{ item.product_image }}" alt="{{ item.product_name }}" class="co-img">
+          <div class="co-info">
+            <span>{{ item.product_name }}</span>
+            <small>{{ item.price | inr }} × {{ item.qty }}</small>
+          </div>
+          <span class="co-price">{{ item.subtotal | inr }}</span>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="order-summary-box">
+      <div class="summary-row"><span>Subtotal</span><span>{{ order.subtotal | inr }}</span></div>
+      <div class="summary-row"><span>Shipping</span><span>{% if order.shipping == 0 %}<span class="free-tag">FREE</span>{% else %}{{ order.shipping | inr }}{% endif %}</span></div>
+      {% if order.discount > 0 %}
+        <div class="summary-row discount-row"><span>Discount ({{ order.coupon_code }})</span><span>− {{ order.discount | inr }}</span></div>
+      {% endif %}
+      <div class="summary-row summary-total"><span>Total Paid</span><span>{{ order.total | inr }}</span></div>
+    </div>
+  </div>
+
+  <!-- Delivery Address -->
+  <div class="order-card" style="margin-top:1rem;">
+    <div class="order-card-header"><strong>📍 Delivery Address</strong></div>
+    <div style="padding:1rem 1.25rem;">
+      <p><strong>{{ order.full_name }}</strong></p>
+      <p>{{ order.address }}, {{ order.city }} — {{ order.pincode }}</p>
+      <p>{{ order.email }}</p>
+    </div>
+  </div>
+</section>
+{% endblock %}
