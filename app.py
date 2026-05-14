@@ -9,6 +9,11 @@ import os, uuid, secrets
 
 app = Flask(__name__)
 
+db = SQLAlchemy(app)
+
+with app.app_context():
+    db.create_all()
+
 # ── Config ─────────────────────────────────────────────────────────────────────
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///shopcart.db")
